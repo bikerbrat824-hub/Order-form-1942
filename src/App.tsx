@@ -190,7 +190,7 @@ export default function App() {
                       <Store className={`w-6 h-6 ${order.pickupMethod === 'pickup' ? 'text-red-700' : 'text-stone-400'}`} />
                       {order.pickupMethod === 'pickup' && <CheckCircle2 className="w-5 h-5 text-red-700" />}
                     </div>
-                    <div className="font-bold">自取 (澳門半島亞豐素街)</div>
+                    <div className="font-bold">自取 (澳門半島亞豐素街5D地下A座，宏基超市對面)</div>
                     <div className="text-xs text-stone-500 mt-1">每張 ¥40，需提前 7-10 天</div>
                   </button>
                 </div>
@@ -206,7 +206,7 @@ export default function App() {
                     {order.pickupMethod === 'shipping' ? (
                       <li>內地「順豐到付」，香港「京東到付」。</li>
                     ) : (
-                      <li>需提前 7-10 天預約（自付款日起算）。地點為澳門半島亞豐素街。</li>
+                      <li>需提前 7-10 天預約（自付款日起算）。地點為澳門半島亞豐素街5D地下A座，宏基超市對面。</li>
                     )}
                     <li>訂製產品不退不換。</li>
                     <li>不會提前發回傳圖（發貨前不看圖）。</li>
@@ -425,7 +425,7 @@ export default function App() {
                   <div className="grid grid-cols-2 gap-4 text-sm border-b border-stone-100 pb-4">
                     <div>
                       <span className="text-stone-400 text-[10px] uppercase font-bold block">取貨方式</span>
-                      <span className="font-bold">{order.pickupMethod === 'shipping' ? '郵寄 (順豐/京東到付)' : '自取 (澳門半島亞豐素街)'}</span>
+                      <span className="font-bold">{order.pickupMethod === 'shipping' ? '郵寄 (順豐/京東到付)' : '自取 (澳門半島亞豐素街5D地下A座，宏基超市對面)'}</span>
                     </div>
                     <div>
                       <span className="text-stone-400 text-[10px] uppercase font-bold block">聯絡人</span>
@@ -486,25 +486,13 @@ export default function App() {
 
               {/* Payment Section */}
               <div className="bg-white p-8 rounded-2xl border border-stone-200 shadow-sm text-center space-y-6">
-                <div className="flex items-center justify-center gap-2 text-red-700 font-bold">
-                  <CreditCard className="w-5 h-5" />
-                  <span>線上支付收款碼 (中銀智慧付)</span>
-                </div>
-                <div className="w-64 h-auto mx-auto rounded-xl overflow-hidden border-2 border-stone-100 shadow-inner bg-stone-50 p-2">
-                  <img 
-                    src="https://storage.googleapis.com/m-infra-ais-pre-6datmpjn4xsrmsaoltwlgu-363662357173.asia-northeast1.run.app/v1/files/ais-dev-6datmpjn4xsrmsaoltwlgu-363662357173.asia-northeast1.run.app/input_file_0.png" 
-                    alt="Veng Lei Laboratory Payment QR Code" 
-                    className="w-full h-auto rounded-lg"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
                 <div className="p-4 bg-stone-50 rounded-xl text-left space-y-3">
                   <p className="text-xs font-bold text-stone-800 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 text-red-700 shrink-0 mt-0.5" />
                     重要最終步驟：
                   </p>
                   <p className="text-xs text-stone-600 leading-relaxed">
-                    請在完成付款後，將本對話的<span className="font-bold text-red-700">「訂單匯總截圖」</span>以及<span className="font-bold text-red-700">「支付成功截圖」</span>，一併發送至我們的<span className="font-bold underline">微信 (WeChat) 帳號：13718718337</span>，以便我們正式將訂單轉交給小畫家製作！感謝您的耐心等待與支持。
+                    請在完成付款後，將本對話的<span className="font-bold text-red-700">「訂單匯總截圖」</span>以及發送至我們的<span className="font-bold underline">微信 (WeChat) 帳號：13718718337</span>並用微信支付，確認成功支付後以便我們正式將訂單轉交給小畫家製作！感謝您的耐心等待與支持。
                   </p>
                 </div>
               </div>

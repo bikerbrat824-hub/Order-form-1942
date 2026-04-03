@@ -62,6 +62,16 @@ export default function App() {
     return charmsTotal + casesTotal;
   }, [order.items]);
 
+  const orderId = useMemo(() => {
+    const now = new Date();
+    const Y = now.getFullYear();
+    const M = String(now.getMonth() + 1).padStart(2, '0');
+    const D = String(now.getDate()).padStart(2, '0');
+    const h = String(now.getHours()).padStart(2, '0');
+    const m = String(now.getMinutes()).padStart(2, '0');
+    return `${Y}${M}${D}${h}${m}`;
+  }, []);
+
   const updateItem = (id: string, updates: Partial<OrderItem>) => {
     setOrder(prev => ({
       ...prev,
@@ -163,6 +173,10 @@ export default function App() {
                     </div>
                     <div className="font-bold">郵寄</div>
                     <div className="text-xs text-stone-500 mt-1">每張 ¥40，約 3 週發貨</div>
+                    <div className="text-[10px] text-red-600 mt-1 font-medium leading-tight">
+                      ※ 由於珠海發出，郵費為國內順豐普快<br />
+                      ※ 香港單為澳門發出
+                    </div>
                   </button>
                   <button
                     onClick={() => setOrder(prev => ({ ...prev, pickupMethod: 'pickup' }))}
@@ -176,7 +190,7 @@ export default function App() {
                       <Store className={`w-6 h-6 ${order.pickupMethod === 'pickup' ? 'text-red-700' : 'text-stone-400'}`} />
                       {order.pickupMethod === 'pickup' && <CheckCircle2 className="w-5 h-5 text-red-700" />}
                     </div>
-                    <div className="font-bold">自取 (澳門店)</div>
+                    <div className="font-bold">自取 (澳門半島亞豐素街)</div>
                     <div className="text-xs text-stone-500 mt-1">每張 ¥40，需提前 7-10 天</div>
                   </button>
                 </div>
@@ -192,7 +206,7 @@ export default function App() {
                     {order.pickupMethod === 'shipping' ? (
                       <li>內地「順豐到付」，香港「京東到付」。</li>
                     ) : (
-                      <li>需提前 7-10 天預約（自付款日起算）。地點為澳門店。</li>
+                      <li>需提前 7-10 天預約（自付款日起算）。地點為澳門半島亞豐素街。</li>
                     )}
                     <li>訂製產品不退不換。</li>
                     <li>不會提前發回傳圖（發貨前不看圖）。</li>
@@ -399,7 +413,10 @@ export default function App() {
               {/* Order Summary Table (The "Cold" Table) */}
               <div id="order-summary" className="bg-white border-2 border-stone-900 overflow-hidden rounded-lg shadow-xl">
                 <div className="bg-stone-900 text-white p-4 flex justify-between items-center">
-                  <span className="font-bold tracking-tighter">VENG LEI LABORATORY ORDER</span>
+                  <div className="flex flex-col">
+                    <span className="font-bold tracking-tighter">VENG LEI LABORATORY ORDER</span>
+                    <span className="text-[10px] opacity-70 font-mono">ID: {orderId}</span>
+                  </div>
                   <span className="text-xs opacity-70">{new Date().toLocaleDateString()}</span>
                 </div>
                 
@@ -408,7 +425,7 @@ export default function App() {
                   <div className="grid grid-cols-2 gap-4 text-sm border-b border-stone-100 pb-4">
                     <div>
                       <span className="text-stone-400 text-[10px] uppercase font-bold block">取貨方式</span>
-                      <span className="font-bold">{order.pickupMethod === 'shipping' ? '郵寄 (順豐/京東到付)' : '自取 (澳門店)'}</span>
+                      <span className="font-bold">{order.pickupMethod === 'shipping' ? '郵寄 (順豐/京東到付)' : '自取 (澳門半島亞豐素街)'}</span>
                     </div>
                     <div>
                       <span className="text-stone-400 text-[10px] uppercase font-bold block">聯絡人</span>
@@ -487,7 +504,7 @@ export default function App() {
                     重要最終步驟：
                   </p>
                   <p className="text-xs text-stone-600 leading-relaxed">
-                    請在完成付款後，將本對話的<span className="font-bold text-red-700">「訂單匯總截圖」</span>以及<span className="font-bold text-red-700">「支付成功截圖」</span>，一併發送至我們的<span className="font-bold underline">微信 (WeChat) 帳號</span>，以便我們正式將訂單轉交給小畫家製作！感謝您的耐心等待與支持。
+                    請在完成付款後，將本對話的<span className="font-bold text-red-700">「訂單匯總截圖」</span>以及<span className="font-bold text-red-700">「支付成功截圖」</span>，一併發送至我們的<span className="font-bold underline">微信 (WeChat) 帳號：13718718337</span>，以便我們正式將訂單轉交給小畫家製作！感謝您的耐心等待與支持。
                   </p>
                 </div>
               </div>

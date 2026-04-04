@@ -34,6 +34,8 @@ interface OrderItem {
 interface ContactInfo {
   name: string;
   phone: string;
+  phoneRegion: string;
+  shippingRegion: string;
   address?: string;
 }
 
@@ -47,14 +49,99 @@ interface OrderData {
 const CHARM_PRICE = 40;
 const CASE_PRICE = 12;
 
+const PHONE_REGIONS = [
+  { label: '🇨🇳 中國 (+86)', value: '+86', length: [11] },
+  { label: '🇭🇰 香港 (+852)', value: '+852', length: [8] },
+  { label: '🇲🇴 澳門 (+853)', value: '+853', length: [8] },
+  { label: '🇹🇼 台灣 (+886)', value: '+886', length: [9] },
+  { label: '🇲🇾 馬來西亞 (+60)', value: '+60', length: [9, 10] },
+];
+
+const SHIPPING_REGIONS = [
+  { label: '內地地區 (順豐到付)', value: 'mainland' },
+  { label: '香港地區 (京東到付)', value: 'hk' },
+  { label: '其他海外地區 (另議)', value: 'overseas' },
+];
+
 export default function App() {
   const [step, setStep] = useState(1);
   const [order, setOrder] = useState<OrderData>({
     pickupMethod: null,
     items: [{ id: crypto.randomUUID(), style: 'A', content: '', illustration: '', hasCase: false }],
-    contact: { name: '', phone: '', address: '' },
+    contact: { name: '', phone: '', phoneRegion: '+86', shippingRegion: 'mainland', address: '' },
     agreedToTerms: false,
   });
+
+  const isPurelyEnglish = (str: string) => /^[a-zA-Z\s]*$/.test(str);
+
+  const isValidContent = (content: string, style: 'A' | 'B') => {
+    if (!content) return false;
+    const isEng = isPurelyEnglish(content);
+    // English count excludes spaces
+    const count = isEng ? content.replace(/\s/g, '').length : content.length;
+    if (style === 'A') {
+      return isEng ? count <= 20 : count <= 8;
+    } else {
+      return isEng ? count <= 12 : count <= 5;
+    }
+  };
+
+  const getContentCount = (content: string) => {
+    if (isPurelyEnglish(content)) {
+      return content.replace(/\s/g, '').length;
+    }
+    return content.length;
+  };
+
+  const downloadOrderFile = () => {
+    const itemsText = order.items.map((item, i) => `
+[項目 ${i + 1}]
+款式：${item.style === 'A' ? 'A 款 (書籤)' : 'B 款 (卡片)'}
+內容：${item.content}
+插圖描述：${item.illustration}
+加購外殼：${item.hasCase ? '是' : '否'}
+`).join('\n');
+
+    const orderContent = `
+[永利紙料 - 訂製訂單回執]
+--------------------------
+訂單編號：${orderId}
+日期：${new Date().toLocaleDateString()}
+取貨方式：${order.pickupMethod === 'shipping' 
+      ? SHIPPING_REGIONS.find(r => r.value === order.contact.shippingRegion)?.label 
+      : '自取 (澳門半島亞豐素街5D地下A座，宏基超市對面)'}
+
+[訂單詳情]
+${itemsText}
+
+[聯絡資訊]
+收件人：${order.contact.name}
+電話：${order.contact.phoneRegion} ${order.contact.phone}
+${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
+
+運送方式：順豐到付
+總計金額：¥ ${totalAmount}
+--------------------------
+提示：請將此檔案連同支付證明傳回微信。
+`;
+
+    const blob = new Blob([orderContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `永利紙料_訂製訂單_${orderId}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const validatePhone = () => {
+    const region = PHONE_REGIONS.find(r => r.value === order.contact.phoneRegion);
+    if (!region) return false;
+    const digitsOnly = order.contact.phone.replace(/\D/g, '');
+    return region.length.includes(digitsOnly.length);
+  };
 
   const totalAmount = useMemo(() => {
     const charmsTotal = order.items.length * CHARM_PRICE;
@@ -99,12 +186,11 @@ export default function App() {
     if (step === 1) return order.pickupMethod !== null && order.agreedToTerms;
     if (step === 2) {
       return order.items.every(item => {
-        const limit = item.style === 'A' ? 8 : 5;
-        return item.content.length > 0 && item.content.length <= limit && item.illustration.length > 0;
+        return isValidContent(item.content, item.style) && item.illustration.length > 0;
       });
     }
     if (step === 3) {
-      const basic = order.contact.name && order.contact.phone;
+      const basic = order.contact.name && validatePhone();
       return order.pickupMethod === 'shipping' ? basic && order.contact.address : basic;
     }
     return true;
@@ -200,17 +286,23 @@ export default function App() {
                 <section className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-4">
                   <h3 className="font-bold text-stone-800 flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 text-red-700" />
-                    訂製規則與條款
+                    服務條款告知
                   </h3>
                   <ul className="text-sm text-stone-600 space-y-2 list-disc pl-4">
+                    <li>
+                      <span className="font-bold text-stone-800">風格說明：</span>
+                      所有插圖由小畫家以品牌風格二次創作，不保證與原創圖案完全一致。
+                    </li>
+                    <li>
+                      <span className="font-bold text-stone-800">謹慎下單：</span>
+                      「不提供文字校對服務，請謹慎填寫」。發貨前不提供返圖，請謹慎下單。
+                    </li>
                     {order.pickupMethod === 'shipping' ? (
                       <li>內地「順豐到付」，香港「京東到付」。</li>
                     ) : (
                       <li>需提前 7-10 天預約（自付款日起算）。地點為澳門半島亞豐素街5D地下A座，宏基超市對面。</li>
                     )}
                     <li>訂製產品不退不換。</li>
-                    <li>不會提前發回傳圖（發貨前不看圖）。</li>
-                    <li>所有插圖由小畫家以品牌風格二次創作，不保證與原圖完全一致。</li>
                   </ul>
                   <label className="flex items-center gap-3 p-3 bg-stone-50 rounded-lg cursor-pointer hover:bg-stone-100 transition-colors">
                     <input
@@ -275,7 +367,7 @@ export default function App() {
                             }`}
                           >
                             A 款 (書籤款)
-                            <span className="block text-[10px] font-normal opacity-70">限 7-8 字</span>
+                            <span className="block text-[10px] font-normal opacity-70">中 ≤ 8 / 英 ≤ 20</span>
                           </button>
                           <button
                             onClick={() => updateItem(item.id, { style: 'B' })}
@@ -283,8 +375,8 @@ export default function App() {
                               item.style === 'B' ? 'border-red-700 bg-red-50 text-red-700' : 'border-stone-100 bg-stone-50 text-stone-500'
                             }`}
                           >
-                            B 款 (名片款)
-                            <span className="block text-[10px] font-normal opacity-70">限 5 字內</span>
+                            B 款 (卡片款)
+                            <span className="block text-[10px] font-normal opacity-70">中 ≤ 5 / 英 ≤ 12</span>
                           </button>
                         </div>
                       </div>
@@ -292,18 +384,25 @@ export default function App() {
                       {/* Content */}
                       <div>
                         <div className="flex justify-between items-end mb-2">
-                          <label className="text-xs font-bold text-stone-400 uppercase tracking-wider block">文字內容</label>
-                          <span className={`text-[10px] font-bold ${item.content.length > (item.style === 'A' ? 8 : 5) ? 'text-red-600' : 'text-stone-400'}`}>
-                            {item.content.length} / {item.style === 'A' ? '8' : '5'}
+                          <label className="text-xs font-bold text-stone-400 uppercase tracking-wider block">文字內容 (直出不校對)</label>
+                          <span className={`text-[10px] font-bold ${!isValidContent(item.content, item.style) && item.content.length > 0 ? 'text-red-600' : 'text-stone-400'}`}>
+                            {getContentCount(item.content)} / {isPurelyEnglish(item.content) ? (item.style === 'A' ? '20' : '12') : (item.style === 'A' ? '8' : '5')}
                           </span>
                         </div>
                         <input
                           type="text"
                           value={item.content}
                           onChange={(e) => updateItem(item.id, { content: e.target.value })}
-                          placeholder={item.style === 'A' ? '請輸入 7-8 個中文字' : '請輸入 5 個中文字內'}
+                          placeholder={item.style === 'A' ? '中 ≤ 8 / 英 ≤ 20 (不計空格)' : '中 ≤ 5 / 英 ≤ 12 (不計空格)'}
                           className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-red-700/20 focus:border-red-700 outline-none transition-all"
                         />
+                        {!isValidContent(item.content, item.style) && item.content.length > 0 && (
+                          <p className="text-[10px] text-red-600 mt-1 font-bold">
+                            {isPurelyEnglish(item.content) 
+                              ? '您的英文字數（不含空格）已超過款式限制，請修改' 
+                              : '字數超過限制，請縮減內容'}
+                          </p>
+                        )}
                       </div>
 
                       {/* Illustration */}
@@ -312,10 +411,16 @@ export default function App() {
                         <textarea
                           value={item.illustration}
                           onChange={(e) => updateItem(item.id, { illustration: e.target.value })}
-                          placeholder="描述動作 (不超過 2 個) 或明確品種/性別"
+                          placeholder={item.style === 'A' ? "建議提供 2 個 圖案描述動作（上限 2 個），或明確的動物品種與性別。" : "只能提供 1 個 圖案或文字描述，動作描述上限 2 個，或明確的動物品種與性別。"}
                           rows={2}
                           className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-red-700/20 focus:border-red-700 outline-none transition-all resize-none"
                         />
+                        {item.style === 'B' && item.illustration.length > 0 && (
+                          <p className="text-[10px] text-stone-500 mt-1 italic">※ B 款提醒：動作描述上限 2 個</p>
+                        )}
+                        <p className="text-[10px] text-stone-400 mt-2 leading-tight">
+                          ※ 聲明：所有插圖由小畫家以品牌風格二次創作，不保證與原創圖案完全一致。發貨前不返圖，請謹慎下單。
+                        </p>
                       </div>
 
                       {/* Case Add-on */}
@@ -367,13 +472,27 @@ export default function App() {
 
                 <div>
                   <label className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2 block">聯絡電話</label>
-                  <input
-                    type="tel"
-                    value={order.contact.phone}
-                    onChange={(e) => setOrder(prev => ({ ...prev, contact: { ...prev.contact, phone: e.target.value } }))}
-                    placeholder="完整電話號碼"
-                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-red-700/20 focus:border-red-700 outline-none transition-all"
-                  />
+                  <div className="flex gap-2 mb-2">
+                    <select
+                      value={order.contact.phoneRegion}
+                      onChange={(e) => setOrder(prev => ({ ...prev, contact: { ...prev.contact, phoneRegion: e.target.value } }))}
+                      className="px-3 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-red-700/20 focus:border-red-700 outline-none transition-all text-sm font-bold"
+                    >
+                      {PHONE_REGIONS.map(r => (
+                        <option key={r.value} value={r.value}>{r.label}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="tel"
+                      value={order.contact.phone}
+                      onChange={(e) => setOrder(prev => ({ ...prev, contact: { ...prev.contact, phone: e.target.value } }))}
+                      placeholder="請輸入電話號碼"
+                      className="flex-1 px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-red-700/20 focus:border-red-700 outline-none transition-all"
+                    />
+                  </div>
+                  {!validatePhone() && order.contact.phone.length > 0 && (
+                    <p className="text-[10px] text-red-600 font-bold">電話位數不正確，請重新輸入</p>
+                  )}
                   {order.pickupMethod === 'pickup' && (
                     <p className="text-[10px] text-red-600 mt-1 font-medium">※ 取件時需核對手機末 4 碼</p>
                   )}
@@ -381,6 +500,20 @@ export default function App() {
 
                 {order.pickupMethod === 'shipping' && (
                   <div>
+                    <label className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2 block">配送地區</label>
+                    <div className="grid grid-cols-1 gap-2 mb-4">
+                      {SHIPPING_REGIONS.map(r => (
+                        <button
+                          key={r.value}
+                          onClick={() => setOrder(prev => ({ ...prev, contact: { ...prev.contact, shippingRegion: r.value } }))}
+                          className={`px-4 py-3 rounded-xl border-2 text-sm font-bold transition-all text-left ${
+                            order.contact.shippingRegion === r.value ? 'border-red-700 bg-red-50 text-red-700' : 'border-stone-100 bg-stone-50 text-stone-500'
+                          }`}
+                        >
+                          {r.label}
+                        </button>
+                      ))}
+                    </div>
                     <label className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2 block">詳細地址</label>
                     <textarea
                       value={order.contact.address}
@@ -414,7 +547,7 @@ export default function App() {
               <div id="order-summary" className="bg-white border-2 border-stone-900 overflow-hidden rounded-lg shadow-xl">
                 <div className="bg-stone-900 text-white p-4 flex justify-between items-center">
                   <div className="flex flex-col">
-                    <span className="font-bold tracking-tighter">VENG LEI LABORATORY ORDER</span>
+                    <span className="font-bold tracking-tighter">永利紙料 - 訂製訂單回執</span>
                     <span className="text-[10px] opacity-70 font-mono">ID: {orderId}</span>
                   </div>
                   <span className="text-xs opacity-70">{new Date().toLocaleDateString()}</span>
@@ -425,7 +558,11 @@ export default function App() {
                   <div className="grid grid-cols-2 gap-4 text-sm border-b border-stone-100 pb-4">
                     <div>
                       <span className="text-stone-400 text-[10px] uppercase font-bold block">取貨方式</span>
-                      <span className="font-bold">{order.pickupMethod === 'shipping' ? '郵寄 (順豐/京東到付)' : '自取 (澳門半島亞豐素街5D地下A座，宏基超市對面)'}</span>
+                      <span className="font-bold">
+                        {order.pickupMethod === 'shipping' 
+                          ? SHIPPING_REGIONS.find(r => r.value === order.contact.shippingRegion)?.label 
+                          : '自取 (澳門半島亞豐素街5D地下A座，宏基超市對面)'}
+                      </span>
                     </div>
                     <div>
                       <span className="text-stone-400 text-[10px] uppercase font-bold block">聯絡人</span>
@@ -433,7 +570,7 @@ export default function App() {
                     </div>
                     <div className="col-span-2">
                       <span className="text-stone-400 text-[10px] uppercase font-bold block">電話</span>
-                      <span className="font-bold">{order.contact.phone}</span>
+                      <span className="font-bold">{order.contact.phoneRegion} {order.contact.phone}</span>
                     </div>
                     {order.pickupMethod === 'shipping' && (
                       <div className="col-span-2">
@@ -472,14 +609,17 @@ export default function App() {
 
                   {/* Total */}
                   <div className="bg-stone-50 p-4 rounded-lg flex justify-between items-center border border-stone-200">
-                    <span className="font-bold text-stone-500">總計金額</span>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-stone-500">總計金額</span>
+                      <span className="text-[10px] text-stone-400 uppercase font-bold">運費說明：順豐到付</span>
+                    </div>
                     <span className="text-2xl font-black text-red-700">¥ {totalAmount}</span>
                   </div>
                 </div>
                 
                 <div className="bg-red-50 p-4 text-center border-t border-red-100">
                   <p className="text-[10px] text-red-800 font-bold uppercase tracking-widest">
-                    匯率 1:1 (RMB) • 截圖此表格回傳微信
+                    發貨前不返圖，請謹慎下單 • 截圖此表格回傳微信
                   </p>
                 </div>
               </div>
@@ -489,10 +629,10 @@ export default function App() {
                 <div className="p-4 bg-stone-50 rounded-xl text-left space-y-3">
                   <p className="text-xs font-bold text-stone-800 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 text-red-700 shrink-0 mt-0.5" />
-                    重要最終步驟：
+                    結案指令：
                   </p>
                   <p className="text-xs text-stone-600 leading-relaxed">
-                    請在完成付款後，將本對話的<span className="font-bold text-red-700">「訂單匯總截圖」</span>以及發送至我們的<span className="font-bold underline">微信 (WeChat) 帳號：13718718337</span>並用微信支付，確認成功支付後以便我們正式將訂單轉交給小畫家製作！感謝您的耐心等待與支持。
+                    請下載下方的<span className="font-bold text-red-700">「訂單摘要文件」</span>，並將該檔案與<span className="font-bold text-red-700">「支付成功截圖」</span>一併傳回微信 (WeChat) 帳號：<span className="font-bold underline">13718718337</span>。確認成功支付後，我們將正式將訂單轉交給小畫家製作！
                   </p>
                 </div>
               </div>
@@ -509,7 +649,7 @@ export default function App() {
               onClick={prevStep}
               className="flex-1 py-4 px-6 rounded-xl border border-stone-200 font-bold flex items-center justify-center gap-2 hover:bg-stone-50 transition-colors"
             >
-              <ChevronLeft className="w-5 h-5" /> 上一步
+              [ ⬅️ 上一步 ]
             </button>
           )}
           {step < 4 ? (
@@ -522,15 +662,20 @@ export default function App() {
                 : 'bg-stone-200 text-stone-400 cursor-not-allowed'
               }`}
             >
-              {step === 3 ? '生成訂單' : '下一步'} <ChevronRight className="w-5 h-5" />
+              {step === 3 ? '生成訂單' : '[ 下一步 ➡️ ]'}
             </button>
           ) : (
-            <button
-              onClick={() => window.print()}
-              className="w-full py-4 px-6 bg-stone-900 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg"
-            >
-              <Download className="w-5 h-5" /> 列印 / 下載 PDF
-            </button>
+            <div className="w-full space-y-4">
+              <button
+                onClick={downloadOrderFile}
+                className="w-full py-4 px-6 bg-stone-900 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg"
+              >
+                <Download className="w-5 h-5" /> [ 📄 下載訂單文件：永利紙料_訂製訂單.txt ]
+              </button>
+              <div className="w-full text-center text-red-700 font-bold animate-pulse">
+                完成並回傳微信
+              </div>
+            </div>
           )}
         </div>
       </footer>

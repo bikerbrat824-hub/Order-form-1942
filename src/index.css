@@ -1,1 +1,38 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply min-h-screen overflow-x-hidden;
+    background: radial-gradient(at 0% 0%, rgba(255, 230, 230, 0.5) 0px, transparent 50%),
+                radial-gradient(at 50% 0%, rgba(230, 240, 255, 0.5) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(255, 240, 230, 0.5) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, rgba(240, 230, 255, 0.5) 0px, transparent 50%),
+                radial-gradient(at 100% 50%, rgba(255, 230, 240, 0.5) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(230, 255, 240, 0.5) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(255, 250, 230, 0.5) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(240, 255, 250, 0.5) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply backdrop-blur-2xl bg-white/40 border border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+  }
+  
+  .glass-input {
+    @apply bg-white/20 border border-white/30 backdrop-blur-md shadow-inner focus:bg-white/30 focus:border-white/50 transition-all outline-none;
+  }
+
+  .glass-button-primary {
+    @apply bg-red-700/80 hover:bg-red-700 text-white backdrop-blur-md border border-white/20 shadow-lg transition-all active:scale-95;
+  }
+
+  .glass-button-secondary {
+    @apply bg-white/20 hover:bg-white/30 text-stone-800 backdrop-blur-md border border-white/30 shadow-sm transition-all active:scale-95;
+  }
+}

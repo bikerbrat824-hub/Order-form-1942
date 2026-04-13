@@ -72,31 +72,39 @@ export default function App() {
     agreedToTerms: false,
   });
 
-  const isPurelyEnglish = (str: string) => /^[a-zA-Z\s]*$/.test(str);
+  const getContentStats = (content: string) => {
+    const clean = content.replace(/\s/g, '');
+    let cnCount = 0;
+    let enCount = 0;
+    for (const char of clean) {
+      if (/[\u4e00-\u9fa5]/.test(char)) {
+        cnCount++;
+      } else {
+        enCount++;
+      }
+    }
+    return { cnCount, enCount, totalWeight: cnCount * 5 + enCount };
+  };
 
   const isValidContent = (content: string, style: 'A' | 'B') => {
     if (!content) return false;
-    const isEng = isPurelyEnglish(content);
-    // English count excludes spaces
-    const count = isEng ? content.replace(/\s/g, '').length : content.length;
+    const { cnCount, enCount, totalWeight } = getContentStats(content);
     if (style === 'A') {
-      return isEng ? count <= 20 : count <= 8;
+      return cnCount <= 8 && enCount <= 15 && totalWeight <= 40;
     } else {
-      return isEng ? count <= 12 : count <= 5;
+      return cnCount <= 5 && enCount <= 12 && totalWeight <= 25;
     }
   };
 
-  const getContentCount = (content: string) => {
-    if (isPurelyEnglish(content)) {
-      return content.replace(/\s/g, '').length;
-    }
-    return content.length;
+  const isValidIllustration = (illustration: string) => {
+    const clean = illustration.replace(/\s/g, '');
+    return clean.length > 0 && clean.length <= 25;
   };
 
   const downloadOrderFile = () => {
     const itemsText = order.items.map((item, i) => `
 [項目 ${i + 1}]
-款式：${item.style === 'A' ? 'A 款 (書籤)' : 'B 款 (卡片)'}
+款式：${item.style === 'A' ? 'A款 書籤' : 'B款 卡片'}
 內容：${item.content}
 插圖描述：${item.illustration}
 加購外殼：${item.hasCase ? '是' : '否'}
@@ -108,8 +116,9 @@ export default function App() {
 訂單編號：${orderId}
 日期：${new Date().toLocaleDateString()}
 取貨方式：${order.pickupMethod === 'shipping' 
-      ? SHIPPING_REGIONS.find(r => r.value === order.contact.shippingRegion)?.label 
-      : '自取 (澳門半島亞豐素街5D地下A座，宏基超市對面)'}
+      ? '郵寄' 
+      : `自取 (澳門半島亞豐素街5D地下A座)`}
+${order.pickupMethod === 'pickup' ? `自取日期：${pickupDate} (下單後 8 天)` : '運費方式：順豐到付（不包郵）'}
 
 [訂單詳情]
 ${itemsText}
@@ -119,7 +128,6 @@ ${itemsText}
 電話：${order.contact.phoneRegion} ${order.contact.phone}
 ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
 
-運送方式：順豐到付
 總計金額：¥ ${totalAmount}
 --------------------------
 提示：請將此檔案連同支付證明傳回微信。
@@ -159,6 +167,12 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
     return `${Y}${M}${D}${h}${m}`;
   }, []);
 
+  const pickupDate = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 8);
+    return date.toISOString().split('T')[0];
+  }, []);
+
   const updateItem = (id: string, updates: Partial<OrderItem>) => {
     setOrder(prev => ({
       ...prev,
@@ -186,7 +200,7 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
     if (step === 1) return order.pickupMethod !== null && order.agreedToTerms;
     if (step === 2) {
       return order.items.every(item => {
-        return isValidContent(item.content, item.style) && item.illustration.length > 0;
+        return isValidContent(item.content, item.style) && isValidIllustration(item.illustration);
       });
     }
     if (step === 3) {
@@ -407,28 +421,33 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
                         <div className="flex justify-between items-end mb-2">
                           <label className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] block">文字內容 (直出不校對)</label>
                           <span className={`text-[10px] font-black ${!isValidContent(item.content, item.style) && item.content.length > 0 ? 'text-red-600' : 'text-stone-400'}`}>
-                            {getContentCount(item.content)} / {isPurelyEnglish(item.content) ? (item.style === 'A' ? '20' : '12') : (item.style === 'A' ? '8' : '5')}
+                            權重: {getContentStats(item.content).totalWeight} / {item.style === 'A' ? '40' : '25'}
                           </span>
                         </div>
                         <input
                           type="text"
                           value={item.content}
                           onChange={(e) => updateItem(item.id, { content: e.target.value })}
-                          placeholder={item.style === 'A' ? '中 ≤ 8 / 英 ≤ 20 (不計空格)' : '中 ≤ 5 / 英 ≤ 12 (不計空格)'}
+                          placeholder={item.style === 'A' ? '中 ≤ 8 / 英 ≤ 15 (1中=5英)' : '中 ≤ 5 / 英 ≤ 12 (1中=5英)'}
                           className="w-full px-5 py-4 glass-input rounded-2xl font-bold placeholder:text-stone-300"
                         />
                         {!isValidContent(item.content, item.style) && item.content.length > 0 && (
                           <p className="text-[10px] text-red-600 mt-2 font-black tracking-wide">
-                            {isPurelyEnglish(item.content) 
-                              ? '您的英文字數（不含空格）已超過款式限制，請修改' 
-                              : '字數超過限制，請縮減內容'}
+                            {getContentStats(item.content).cnCount > (item.style === 'A' ? 8 : 5) ? '中文字數超限' : 
+                             getContentStats(item.content).enCount > (item.style === 'A' ? 15 : 12) ? '英文字數超限' : 
+                             '總權重超過視覺平衡限制'}
                           </p>
                         )}
                       </div>
 
                       {/* Illustration */}
                       <div>
-                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] mb-3 block">插圖/公仔描述</label>
+                        <div className="flex justify-between items-end mb-2">
+                          <label className="text-[10px] font-black text-stone-400 uppercase tracking-[0.2em] block">插圖/公仔描述</label>
+                          <span className={`text-[10px] font-black ${!isValidIllustration(item.illustration) && item.illustration.length > 0 ? 'text-red-600' : 'text-stone-400'}`}>
+                            {item.illustration.replace(/\s/g, '').length} / 25
+                          </span>
+                        </div>
                         <textarea
                           value={item.illustration}
                           onChange={(e) => updateItem(item.id, { illustration: e.target.value })}
@@ -436,6 +455,9 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
                           rows={3}
                           className="w-full px-5 py-4 glass-input rounded-2xl font-bold placeholder:text-stone-300 resize-none"
                         />
+                        {!isValidIllustration(item.illustration) && item.illustration.replace(/\s/g, '').length > 25 && (
+                          <p className="text-[10px] text-red-600 mt-2 font-black tracking-wide">描述字數超限 (上限 25 字)</p>
+                        )}
                         {item.style === 'B' && item.illustration.length > 0 && (
                           <p className="text-[10px] text-stone-500 mt-2 font-bold italic">※ B 款提醒：動作描述上限 2 個</p>
                         )}
@@ -586,15 +608,25 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
                       <span className="text-stone-400 text-[10px] uppercase font-black block tracking-widest mb-1">取貨方式</span>
                       <span className="font-black text-stone-800">
                         {order.pickupMethod === 'shipping' 
-                          ? SHIPPING_REGIONS.find(r => r.value === order.contact.shippingRegion)?.label 
+                          ? '郵寄' 
                           : '自取 (澳門半島亞豐素街5D地下A座)'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-stone-400 text-[10px] uppercase font-black block tracking-widest mb-1">
+                        {order.pickupMethod === 'pickup' ? '自取日期' : '運費方式'}
+                      </span>
+                      <span className="font-black text-stone-800">
+                        {order.pickupMethod === 'pickup' 
+                          ? `${pickupDate} (下單後 8 天)` 
+                          : '順豐到付（不包郵）'}
                       </span>
                     </div>
                     <div>
                       <span className="text-stone-400 text-[10px] uppercase font-black block tracking-widest mb-1">聯絡人</span>
                       <span className="font-black text-stone-800">{order.contact.name}</span>
                     </div>
-                    <div className="col-span-2">
+                    <div>
                       <span className="text-stone-400 text-[10px] uppercase font-black block tracking-widest mb-1">電話</span>
                       <span className="font-black text-stone-800">{order.contact.phoneRegion} {order.contact.phone}</span>
                     </div>
@@ -624,7 +656,7 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
                           {order.items.map((item, i) => (
                             <tr key={item.id} className="border-b border-white/50">
                               <td className="py-4 pr-3 font-mono text-xs font-bold">{i + 1}</td>
-                              <td className="py-4 px-3 font-black">{item.style === 'A' ? '書籤' : '名片'}</td>
+                              <td className="py-4 px-3 font-black">{item.style === 'A' ? 'A款 書籤' : 'B款 卡片'}</td>
                               <td className="py-4 px-3 font-black text-red-700">{item.content}</td>
                               <td className="py-4 px-3 text-xs text-stone-600 leading-relaxed font-bold">{item.illustration}</td>
                               <td className="py-4 pl-3 text-right font-black">{item.hasCase ? '有' : '無'}</td>
@@ -639,7 +671,9 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
                   <div className="bg-white/30 backdrop-blur-md p-6 rounded-2xl flex justify-between items-center border border-white/50 shadow-inner">
                     <div className="flex flex-col">
                       <span className="font-black text-stone-500 uppercase text-[10px] tracking-widest">總計金額</span>
-                      <span className="text-[10px] text-stone-400 uppercase font-black tracking-tighter mt-1">運費說明：順豐到付</span>
+                      <span className="text-[10px] text-stone-400 uppercase font-black tracking-tighter mt-1">
+                        {order.pickupMethod === 'pickup' ? `自取日期：${pickupDate}` : '運費方式：順豐到付（不包郵）'}
+                      </span>
                     </div>
                     <span className="text-3xl font-black text-red-700 tracking-tighter">¥ {totalAmount}</span>
                   </div>
@@ -699,7 +733,7 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
                 onClick={downloadOrderFile}
                 className="w-full py-5 px-6 glass-button-primary rounded-2xl font-black flex items-center justify-center gap-3 text-lg"
               >
-                <Download className="w-6 h-6" /> [ 📄 下載訂單文件：永利紙料_訂製訂單.txt ]
+                <Download className="w-6 h-6" /> [ 📄 點擊PDF後回傳微信，並在微信中付款 ]
               </button>
               <div className="w-full text-center text-red-700 font-black animate-pulse tracking-widest uppercase text-sm">
                 完成並回傳微信

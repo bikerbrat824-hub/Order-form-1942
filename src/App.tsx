@@ -72,6 +72,8 @@ export default function App() {
     agreedToTerms: false,
   });
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const getContentStats = (content: string) => {
     const clean = content.replace(/\s/g, '');
     let cnCount = 0;
@@ -116,7 +118,7 @@ export default function App() {
 訂單編號：${orderId}
 日期：${new Date().toLocaleDateString()}
 取貨方式：${order.pickupMethod === 'shipping' 
-      ? '郵寄' 
+      ? '代寄服務 (由澳門協助帶至珠海轉寄內地快遞)' 
       : `自取 (澳門半島亞豐素街5D地下A座)`}
 ${order.pickupMethod === 'pickup' ? `自取日期：${pickupDate} (下單後 8 天)` : '運費方式：順豐到付（不包郵）'}
 
@@ -181,6 +183,7 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
   };
 
   const addItem = () => {
+    setErrorMessage(null);
     setOrder(prev => ({
       ...prev,
       items: [...prev.items, { id: crypto.randomUUID(), style: 'A', content: '', illustration: '', hasCase: false }]
@@ -196,25 +199,56 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
     }
   };
 
-  const validateStep = () => {
-    if (step === 1) return order.pickupMethod !== null && order.agreedToTerms;
+  const validateStep = (showFeedback = false) => {
+    if (step === 1) {
+      if (!order.pickupMethod || !order.agreedToTerms) {
+        if (showFeedback) {
+          setErrorMessage('請先選擇取貨方式並勾選同意服務條款');
+        }
+        return false;
+      }
+      return true;
+    }
     if (step === 2) {
-      return order.items.every(item => {
+      if (order.pickupMethod === 'shipping' && order.items.length < 2) {
+        if (showFeedback) {
+          setErrorMessage('代寄服務需訂製 2 張或以上方可下單，請增加訂製數量或更改為自取方式。');
+        }
+        return false;
+      }
+      const allValid = order.items.every(item => {
         return isValidContent(item.content, item.style) && isValidIllustration(item.illustration);
       });
+      if (!allValid) {
+        if (showFeedback) {
+          setErrorMessage('請檢查所有品項的文字內容與插圖描述是否符合規範');
+        }
+        return false;
+      }
+      return true;
     }
     if (step === 3) {
-      const basic = order.contact.name && validatePhone();
-      return order.pickupMethod === 'shipping' ? basic && order.contact.address : basic;
+      const basic = !!(order.contact.name && validatePhone());
+      const valid = order.pickupMethod === 'shipping' ? basic && !!order.contact.address : basic;
+      if (!valid && showFeedback) {
+        setErrorMessage('請完整填寫收件人姓名、聯絡電話' + (order.pickupMethod === 'shipping' ? '與詳細配送地址' : ''));
+      }
+      return valid;
     }
     return true;
   };
 
   const nextStep = () => {
-    if (validateStep()) setStep(s => s + 1);
+    setErrorMessage(null);
+    if (validateStep(true)) {
+      setStep(s => s + 1);
+    }
   };
 
-  const prevStep = () => setStep(s => s - 1);
+  const prevStep = () => {
+    setErrorMessage(null);
+    setStep(s => s - 1);
+  };
 
   return (
     <div className="min-h-screen text-stone-900 font-sans selection:bg-red-100">
@@ -260,7 +294,10 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
                   <button
-                    onClick={() => setOrder(prev => ({ ...prev, pickupMethod: 'shipping' }))}
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setOrder(prev => ({ ...prev, pickupMethod: 'shipping' }));
+                    }}
                     className={`p-5 rounded-2xl border-2 transition-all text-left glass-card ${
                       order.pickupMethod === 'shipping' 
                       ? 'border-red-700/50 bg-red-50/30' 
@@ -271,15 +308,22 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
                       <Truck className={`w-7 h-7 ${order.pickupMethod === 'shipping' ? 'text-red-700' : 'text-stone-400'}`} />
                       {order.pickupMethod === 'shipping' && <CheckCircle2 className="w-6 h-6 text-red-700" />}
                     </div>
-                    <div className="font-black text-lg tracking-tight">郵寄</div>
+                    <div className="font-black text-lg tracking-tight">代寄服務</div>
                     <div className="text-xs text-stone-600 mt-1 font-medium">每張 ¥40，約 3 週發貨</div>
+                    <div className="text-[11px] text-stone-600 mt-1 font-medium leading-snug">
+                      （由澳門協助帶至珠海轉寄內地快遞之代寄服務，請留意相關條款）
+                    </div>
                     <div className="text-[10px] text-red-700 mt-2 font-bold leading-tight bg-red-50/50 p-2 rounded-lg border border-red-100/50">
+                      ※ 滿 2 張起方可享有代寄服務<br />
                       ※ 由於珠海發出，郵費為國內順豐普快<br />
                       ※ 香港單為澳門發出
                     </div>
                   </button>
                   <button
-                    onClick={() => setOrder(prev => ({ ...prev, pickupMethod: 'pickup' }))}
+                    onClick={() => {
+                      setErrorMessage(null);
+                      setOrder(prev => ({ ...prev, pickupMethod: 'pickup' }));
+                    }}
                     className={`p-5 rounded-2xl border-2 transition-all text-left glass-card ${
                       order.pickupMethod === 'pickup' 
                       ? 'border-red-700/50 bg-red-50/30' 
@@ -319,6 +363,13 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
                       <div>
                         <span className="font-black text-stone-800">謹慎下單：</span>
                         「不提供文字校對服務，請謹慎填寫」。發貨前不提供返圖，請謹慎下單。
+                      </div>
+                    </li>
+                    <li className="flex gap-3 bg-red-50/60 p-3.5 rounded-2xl border-2 border-red-200/70">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-700 mt-2 shrink-0" />
+                      <div className="text-xs text-stone-700 leading-relaxed">
+                        <span className="font-black text-red-800">【代寄服務特別說明】：</span>
+                        因本服務為澳門義務協助帶至珠海投遞之跨區代寄，為維持營運與出貨成本平衡，訂製滿 2 張或以上方可享有代寄服務。如僅訂製 1 張，請選擇澳門線下自取；若有代寄需求請調整訂購數量至 2 張以上。
                       </div>
                     </li>
                     <li className="flex gap-3">
@@ -362,17 +413,33 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
               className="space-y-8"
             >
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-black flex items-center gap-2 tracking-tight">
-                  <ClipboardCheck className="w-5 h-5 text-red-700" />
-                  第二階段：詳細規格收集
-                </h2>
+                <div>
+                  <h2 className="text-xl font-black flex items-center gap-2 tracking-tight">
+                    <ClipboardCheck className="w-5 h-5 text-red-700" />
+                    第二階段：詳細規格收集
+                  </h2>
+                  <p className="text-xs text-stone-500 font-bold mt-1">
+                    目前已建立 <span className="text-red-700 font-black">{order.items.length}</span> 張訂製項目
+                    {order.pickupMethod === 'shipping' && ' (代寄服務需滿 2 張)'}
+                  </p>
+                </div>
                 <button 
                   onClick={addItem}
-                  className="flex items-center gap-1 text-sm font-black text-red-700 hover:text-red-800 transition-colors"
+                  className="flex items-center gap-1 text-sm font-black text-red-700 hover:text-red-800 transition-colors bg-red-50/60 px-4 py-2 rounded-xl border border-red-200/50 shadow-sm"
                 >
                   <Plus className="w-4 h-4" /> 新增一張
                 </button>
               </div>
+
+              {/* Shipping Min 2 Items Warning Banner */}
+              {order.pickupMethod === 'shipping' && order.items.length < 2 && (
+                <div className="p-4 bg-red-50/90 border-2 border-red-300 rounded-2xl flex items-start gap-3 text-red-700 shadow-sm">
+                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <div className="text-xs font-black leading-relaxed">
+                    代寄服務需訂製 2 張或以上方可下單，請增加訂製數量或更改為自取方式。
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-8">
                 {order.items.map((item, index) => (
@@ -608,7 +675,7 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
                       <span className="text-stone-400 text-[10px] uppercase font-black block tracking-widest mb-1">取貨方式</span>
                       <span className="font-black text-stone-800">
                         {order.pickupMethod === 'shipping' 
-                          ? '郵寄' 
+                          ? '代寄服務' 
                           : '自取 (澳門半島亞豐素街5D地下A座)'}
                       </span>
                     </div>
@@ -703,6 +770,31 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
         </AnimatePresence>
       </main>
 
+      {/* Error Message Toast / Prompt */}
+      <AnimatePresence>
+        {errorMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-28 left-4 right-4 max-w-2xl mx-auto z-30"
+          >
+            <div className="p-4 bg-red-800/95 backdrop-blur-xl text-white rounded-2xl font-black text-xs shadow-2xl flex items-center justify-between gap-3 border border-red-400/30">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 shrink-0 text-red-200" />
+                <span className="leading-relaxed">{errorMessage}</span>
+              </div>
+              <button
+                onClick={() => setErrorMessage(null)}
+                className="text-white/80 hover:text-white text-xs px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition-colors shrink-0"
+              >
+                關閉
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Footer Navigation */}
       <footer className="fixed bottom-0 left-0 right-0 bg-white/40 backdrop-blur-2xl border-t border-white/30 p-6 z-20">
         <div className="max-w-2xl mx-auto flex gap-4">
@@ -717,11 +809,10 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
           {step < 4 ? (
             <button
               onClick={nextStep}
-              disabled={!validateStep()}
               className={`flex-[2] py-4 px-6 rounded-2xl font-black flex items-center justify-center gap-2 transition-all ${
-                validateStep() 
+                validateStep(false) 
                 ? 'glass-button-primary' 
-                : 'bg-white/10 text-stone-400 cursor-not-allowed border border-white/10'
+                : 'glass-button-secondary border-red-300/80 text-stone-800 hover:border-red-400'
               }`}
             >
               {step === 3 ? '生成訂單' : '[ 下一步 ➡️ ]'}

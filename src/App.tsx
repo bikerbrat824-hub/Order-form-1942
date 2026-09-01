@@ -15,7 +15,10 @@ import {
   ChevronRight,
   ChevronLeft,
   Download,
-  CreditCard
+  CreditCard,
+  BookOpen,
+  ZoomIn,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -49,6 +52,9 @@ interface OrderData {
 const CHARM_PRICE = 40;
 const CASE_PRICE = 12;
 
+const GUIDE_IMAGE_1 = 'https://lh3.googleusercontent.com/d/18c0qeMsWbzzxndsOzmUhHsblh0vU_9br';
+const GUIDE_IMAGE_2 = 'https://lh3.googleusercontent.com/d/1DWnrs1SKGfmCW07Jkkz8V4o8DbOR2tbE';
+
 const PHONE_REGIONS = [
   { label: '🇨🇳 中國 (+86)', value: '+86', length: [11] },
   { label: '🇭🇰 香港 (+852)', value: '+852', length: [8] },
@@ -73,6 +79,7 @@ export default function App() {
   });
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ src: string; title: string; desc: string } | null>(null);
 
   const getContentStats = (content: string) => {
     const clean = content.replace(/\s/g, '');
@@ -441,6 +448,102 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
                 </div>
               )}
 
+              {/* 訂製參考說明圖導引區塊 */}
+              <div className="glass-card p-6 rounded-3xl space-y-4 border-2 border-stone-300/60 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="p-2 bg-red-100/80 text-red-700 rounded-xl border border-red-200/50">
+                      <BookOpen className="w-5 h-5" />
+                    </span>
+                    <div>
+                      <h3 className="font-black text-stone-900 text-sm tracking-tight flex items-center gap-2">
+                        訂製款式與加購樣式參考圖
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-red-50 text-red-700 rounded-full border border-red-200">
+                          點擊圖片可放大
+                        </span>
+                      </h3>
+                      <p className="text-xs text-stone-500 font-medium mt-0.5">
+                        提供尺寸款式比較與保護殼配件樣式，填寫訂單時可參考以下說明
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* 第 1 張：尺寸款式說明圖 */}
+                  <div 
+                    onClick={() => setPreviewImage({
+                      src: GUIDE_IMAGE_1,
+                      title: '第 1 張：尺寸款式說明圖',
+                      desc: 'A款（書籤尺寸，字數6-7字內）／ B款（名片尺寸可放手機後背，字數5字內）'
+                    })}
+                    className="group relative bg-white/50 rounded-2xl overflow-hidden border-2 border-stone-200/90 hover:border-red-500/70 transition-all cursor-pointer shadow-sm hover:shadow-md"
+                  >
+                    <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden flex items-center justify-center">
+                      <img
+                        src={GUIDE_IMAGE_1}
+                        alt="尺寸款式說明圖"
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3 text-white">
+                        <span className="text-xs font-black flex items-center gap-1.5 drop-shadow">
+                          <ZoomIn className="w-4 h-4 text-red-300" /> 點擊放大檢視
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-3.5 bg-white/80 border-t border-stone-100">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-red-700 bg-red-50 px-2 py-0.5 rounded-md border border-red-100">
+                          圖 1 · 尺寸與款式
+                        </span>
+                        <span className="text-[10px] text-stone-400 font-bold">A/B款 尺寸對比</span>
+                      </div>
+                      <div className="text-xs font-black text-stone-800">尺寸款式說明圖</div>
+                      <p className="text-[11px] text-stone-500 font-medium mt-1 leading-snug">
+                        A款書籤尺寸（字數較多）／ B款名片尺寸（可放手機殼後）
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 第 2 張：加購保護殼樣式圖 */}
+                  <div 
+                    onClick={() => setPreviewImage({
+                      src: GUIDE_IMAGE_2,
+                      title: '第 2 張：加購保護殼樣式圖',
+                      desc: '掛件加購：A款軟套（只能放一張，防水，12/個）／ B款硬套（可正反放兩張或地鐵卡，12/個）'
+                    })}
+                    className="group relative bg-white/50 rounded-2xl overflow-hidden border-2 border-stone-200/90 hover:border-red-500/70 transition-all cursor-pointer shadow-sm hover:shadow-md"
+                  >
+                    <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden flex items-center justify-center">
+                      <img
+                        src={GUIDE_IMAGE_2}
+                        alt="加購保護殼樣式圖"
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3 text-white">
+                        <span className="text-xs font-black flex items-center gap-1.5 drop-shadow">
+                          <ZoomIn className="w-4 h-4 text-red-300" /> 點擊放大檢視
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-3.5 bg-white/80 border-t border-stone-100">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-red-700 bg-red-50 px-2 py-0.5 rounded-md border border-red-100">
+                          圖 2 · 配件加購
+                        </span>
+                        <span className="text-[10px] text-stone-400 font-bold">掛件軟套 / 硬套</span>
+                      </div>
+                      <div className="text-xs font-black text-stone-800">加購保護殼樣式圖</div>
+                      <p className="text-[11px] text-stone-500 font-medium mt-1 leading-snug">
+                        A款軟套（防水掛件）／ B款硬套（可正反放兩張或地鐵卡）
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-8">
                 {order.items.map((item, index) => (
                   <div key={item.id} className="glass-card p-8 rounded-3xl relative group">
@@ -791,6 +894,56 @@ ${order.pickupMethod === 'shipping' ? `地址：${order.contact.address}` : ''}
                 關閉
               </button>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Image Zoom Modal */}
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPreviewImage(null)}
+            className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-2xl w-full bg-stone-900/95 border border-white/20 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+            >
+              <div className="flex items-center justify-between p-4 px-6 border-b border-white/10">
+                <div>
+                  <h4 className="text-white font-black text-sm">{previewImage.title}</h4>
+                  <p className="text-stone-300 text-xs mt-0.5 font-medium">{previewImage.desc}</p>
+                </div>
+                <button
+                  onClick={() => setPreviewImage(null)}
+                  className="p-2 text-stone-400 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all shrink-0 ml-4"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-4 flex items-center justify-center overflow-auto bg-stone-950/60 flex-1">
+                <img
+                  src={previewImage.src}
+                  alt={previewImage.title}
+                  referrerPolicy="no-referrer"
+                  className="max-w-full max-h-[68vh] object-contain rounded-xl shadow-lg"
+                />
+              </div>
+              <div className="p-3 text-center bg-stone-900/90 border-t border-white/10">
+                <button
+                  onClick={() => setPreviewImage(null)}
+                  className="text-xs font-bold text-stone-300 hover:text-white px-5 py-2 bg-white/10 hover:bg-white/20 rounded-full transition-all"
+                >
+                  關閉預覽
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

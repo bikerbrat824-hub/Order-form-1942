@@ -1,5 +1,7 @@
 {
   "name": "永利紙料 (Veng Lei Laboratory) 訂製小助手",
   "description": "手繪符咒訂製流程引導與訂單生成工具",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
+

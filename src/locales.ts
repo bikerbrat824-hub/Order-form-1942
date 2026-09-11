@@ -56,6 +56,10 @@ export interface TranslationDictionary {
     itemCount: (count: number) => string;
     shippingMinRequirement: string;
     addItem: string;
+    cardFooterHint: string;
+    addItemBelow: string;
+    bottomAddTitle: (nextIndex: number) => string;
+    bottomAddSubtitle: string;
     shippingMinAlert: string;
     guideCard: {
       badge: string;
@@ -236,6 +240,10 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       itemCount: (count) => `目前已建立 ${count} 張訂製項目`,
       shippingMinRequirement: ' (代寄服務需滿 2 張)',
       addItem: '新增一張',
+      cardFooterHint: '需訂製多張？填完可直接點擊新增下一張',
+      addItemBelow: '新增一張',
+      bottomAddTitle: (nextIndex: number) => `點此新增第 ${nextIndex} 張訂製項目`,
+      bottomAddSubtitle: '可自選不同字句、插圖與款式配件（滿 2 張起享代寄服務）',
       shippingMinAlert: '代寄服務需訂製 2 張或以上方可下單，請增加訂製數量或更改為自取方式。',
       guideCard: {
         badge: '點擊圖片可放大',
@@ -420,6 +428,10 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       itemCount: (count) => `目前已建立 ${count} 张订制项目`,
       shippingMinRequirement: ' (代寄服务需满 2 张)',
       addItem: '新增一张',
+      cardFooterHint: '需订制多张？填完可直接点击新增下一张',
+      addItemBelow: '新增一张',
+      bottomAddTitle: (nextIndex: number) => `点此新增第 ${nextIndex} 张订制项目`,
+      bottomAddSubtitle: '可自选不同字句、插图与款式配件（满 2 张起享代寄服务）',
       shippingMinAlert: '代寄服务需订制 2 张或以上方可下单，请增加订制数量或更改为自取方式。',
       guideCard: {
         badge: '点击图片可放大',
@@ -604,6 +616,10 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       itemCount: (count) => `Currently configured ${count} charm(s)`,
       shippingMinRequirement: ' (Forwarding requires min. 2)',
       addItem: '+ Add Charm',
+      cardFooterHint: 'Ordering multiple? Add next charm directly below',
+      addItemBelow: '+ Add Charm',
+      bottomAddTitle: (nextIndex: number) => `Add Charm #${nextIndex}`,
+      bottomAddSubtitle: 'Customize individual style, text & case (min. 2 required for forwarding)',
       shippingMinAlert: 'Forwarding service requires at least 2 charms. Please add items or switch to in-store pickup.',
       guideCard: {
         badge: 'Click to zoom',

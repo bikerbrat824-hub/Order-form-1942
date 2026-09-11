@@ -197,10 +197,19 @@ ${f.tip}
 
   const addItem = () => {
     setErrorMessage(null);
+    const newId = crypto.randomUUID();
     setOrder(prev => ({
       ...prev,
-      items: [...prev.items, { id: crypto.randomUUID(), style: 'A', content: '', illustration: '', hasCase: false }]
+      items: [...prev.items, { id: newId, style: 'A', content: '', illustration: '', hasCase: false }]
     }));
+    setTimeout(() => {
+      const el = document.getElementById(`item-card-${newId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const input = el.querySelector<HTMLInputElement>('input[type="text"]');
+        if (input) input.focus();
+      }
+    }, 80);
   };
 
   const removeItem = (id: string) => {
@@ -589,7 +598,7 @@ ${f.tip}
               {/* Items List */}
               <div className="space-y-8">
                 {order.items.map((item, index) => (
-                  <div key={item.id} className="glass-card p-8 rounded-3xl relative group">
+                  <div key={item.id} id={`item-card-${item.id}`} className="glass-card p-8 rounded-3xl relative group">
                     <div className="absolute -left-4 top-8 w-10 h-10 bg-stone-900 text-white rounded-2xl flex items-center justify-center font-black text-lg shadow-xl border border-white/20 backdrop-blur-md">
                       {index + 1}
                     </div>
@@ -704,9 +713,51 @@ ${f.tip}
                           </div>
                         </div>
                       </label>
+
+                      {/* 每一張下方的「新增一張」優化功能區塊 */}
+                      <div className="pt-5 mt-6 border-t border-stone-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-stone-100/50 -mx-8 -mb-8 p-5 sm:px-8 rounded-b-3xl">
+                        <div className="text-xs text-stone-600 font-bold flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-red-600 shrink-0" />
+                          <span>{t.step2.cardFooterHint}</span>
+                        </div>
+                        <button
+                          type="button"
+                          id={`add-item-below-btn-${item.id}`}
+                          onClick={addItem}
+                          className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-700 hover:bg-red-800 text-white font-black text-xs transition-all shadow-sm hover:shadow active:scale-95 cursor-pointer shrink-0"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>{t.step2.addItem}</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
+
+                {/* 列表底部的顯眼大卡片新增按鈕 */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    id="add-item-bottom-big-btn"
+                    onClick={addItem}
+                    className="w-full py-5 px-6 rounded-3xl border-2 border-dashed border-red-300 hover:border-red-600 bg-white/60 hover:bg-red-50/70 transition-all flex items-center justify-center gap-4 text-stone-800 hover:text-red-700 shadow-sm hover:shadow-md group cursor-pointer active:scale-[0.99]"
+                  >
+                    <div className="w-10 h-10 rounded-2xl bg-red-700 text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform shrink-0">
+                      <Plus className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-black text-sm sm:text-base flex items-center gap-2">
+                        <span>{t.step2.bottomAddTitle(order.items.length + 1)}</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-red-100 text-red-700 rounded-full border border-red-200">
+                          + ¥40
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-500 font-medium mt-0.5">
+                        {t.step2.bottomAddSubtitle}
+                      </p>
+                    </div>
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}

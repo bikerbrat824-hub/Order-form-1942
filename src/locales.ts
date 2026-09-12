@@ -209,7 +209,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       title: '第一階段：確認取貨方式',
       shipping: {
         title: '代寄服務',
-        priceSub: '每張 ¥40，約 3 週發貨',
+        priceSub: 'A款 ¥50 / B款 ¥40，約 3 週發貨',
         desc: '（由澳門協助帶至珠海轉寄內地快遞之代寄服務，請留意相關條款）',
         tip1: '※ 滿 2 張起方可享有代寄服務',
         tip2: '※ 由於珠海發出，郵費為國內順豐普快',
@@ -219,7 +219,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
         title: '自取',
         address: '澳門半島亞豐素街5D地下A座',
         landmark: '(宏基超市對面)',
-        priceSub: '每張 ¥40，需提前 7-10 天',
+        priceSub: 'A款 ¥50 / B款 ¥40，需提前 7-10 天',
       },
       terms: {
         title: '服務條款告知',
@@ -266,9 +266,9 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       item: {
         styleLabel: '尺寸款式',
         styleA: 'A 款 (書籤款)',
-        styleAHint: '中 ≤ 8 / 英 ≤ 20',
+        styleAHint: '中 ≤ 8 / 英 ≤ 20 · ¥50',
         styleB: 'B 款 (卡片款)',
-        styleBHint: '中 ≤ 5 / 英 ≤ 12',
+        styleBHint: '中 ≤ 5 / 英 ≤ 12 · ¥40',
         contentLabel: '文字內容 (直出不校對)',
         weightLabel: (weight, max) => `權重: ${weight} / ${max}`,
         placeholderA: '中 ≤ 8 / 英 ≤ 15 (1中=5英)',
@@ -397,7 +397,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       title: '第一阶段：确认取件方式',
       shipping: {
         title: '代寄服务',
-        priceSub: '每张 ¥40，约 3 周发货',
+        priceSub: 'A款 ¥50 / B款 ¥40，约 3 周发货',
         desc: '（由澳门协助带至珠海转寄内地快递之代寄服务，请留意相关条款）',
         tip1: '※ 满 2 张起方可享有代寄服务',
         tip2: '※ 由于珠海发出，邮费为国内顺丰普快',
@@ -407,7 +407,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
         title: '自取',
         address: '澳门半岛亚丰素街5D地下A座',
         landmark: '(宏基超市对面)',
-        priceSub: '每张 ¥40，需提前 7-10 天',
+        priceSub: 'A款 ¥50 / B款 ¥40，需提前 7-10 天',
       },
       terms: {
         title: '服务条款告知',
@@ -454,9 +454,9 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       item: {
         styleLabel: '尺寸款式',
         styleA: 'A 款 (书签款)',
-        styleAHint: '中 ≤ 8 / 英 ≤ 20',
+        styleAHint: '中 ≤ 8 / 英 ≤ 20 · ¥50',
         styleB: 'B 款 (卡片款)',
-        styleBHint: '中 ≤ 5 / 英 ≤ 12',
+        styleBHint: '中 ≤ 5 / 英 ≤ 12 · ¥40',
         contentLabel: '文字内容 (直出不校对)',
         weightLabel: (weight, max) => `权重: ${weight} / ${max}`,
         placeholderA: '中 ≤ 8 / 英 ≤ 15 (1中=5英)',
@@ -585,7 +585,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       title: 'Step 1: Select Pickup / Delivery Method',
       shipping: {
         title: 'Forwarding Service',
-        priceSub: '¥40 each, ships in approx. 3 weeks',
+        priceSub: 'Style A ¥50 / Style B ¥40, ships in approx. 3 weeks',
         desc: '(Macau-assisted transit to Zhuhai courier forwarding; please note terms)',
         tip1: '※ Forwarding service requires min. 2 custom charms',
         tip2: '※ Dispatched from Zhuhai via SF Express (freight collect)',
@@ -595,7 +595,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
         title: 'In-Store Pickup',
         address: '5D Rua de Afonso de Albuquerque, G/F Block A, Macau Peninsula',
         landmark: '(Opposite Grand Mart)',
-        priceSub: '¥40 each, 7-10 days notice required',
+        priceSub: 'Style A ¥50 / Style B ¥40, 7-10 days notice required',
       },
       terms: {
         title: 'Terms of Service',
@@ -642,9 +642,9 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       item: {
         styleLabel: 'Size & Style',
         styleA: 'Style A (Bookmark)',
-        styleAHint: 'CN ≤ 8 / EN ≤ 20',
+        styleAHint: 'CN ≤ 8 / EN ≤ 20 · ¥50',
         styleB: 'Style B (Card)',
-        styleBHint: 'CN ≤ 5 / EN ≤ 12',
+        styleBHint: 'CN ≤ 5 / EN ≤ 12 · ¥40',
         contentLabel: 'Text Content (Direct output, no proofreading)',
         weightLabel: (weight, max) => `Weight: ${weight} / ${max}`,
         placeholderA: 'CN ≤ 8 / EN ≤ 15 (1 CN char = 5 EN letters)',

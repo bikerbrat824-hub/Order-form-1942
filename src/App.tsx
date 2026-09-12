@@ -29,7 +29,8 @@ import {
 } from './types';
 import { translations } from './locales';
 
-const CHARM_PRICE = 40;
+const PRICE_STYLE_A = 50;
+const PRICE_STYLE_B = 40;
 const CASE_PRICE = 12;
 
 const GUIDE_IMAGE_1 = 'https://lh3.googleusercontent.com/d/18c0qeMsWbzzxndsOzmUhHsblh0vU_9br';
@@ -123,7 +124,10 @@ export default function App() {
   };
 
   const totalAmount = useMemo(() => {
-    const charmsTotal = order.items.length * CHARM_PRICE;
+    const charmsTotal = order.items.reduce(
+      (sum, item) => sum + (item.style === 'A' ? PRICE_STYLE_A : PRICE_STYLE_B),
+      0
+    );
     const casesTotal = order.items.filter(i => i.hasCase).length * CASE_PRICE;
     return charmsTotal + casesTotal;
   }, [order.items]);
@@ -749,7 +753,7 @@ ${f.tip}
                       <div className="font-black text-sm sm:text-base flex items-center gap-2">
                         <span>{t.step2.bottomAddTitle(order.items.length + 1)}</span>
                         <span className="text-[10px] font-bold px-2 py-0.5 bg-red-100 text-red-700 rounded-full border border-red-200">
-                          + ¥40
+                          A款 ¥50 / B款 ¥40
                         </span>
                       </div>
                       <p className="text-xs text-stone-500 font-medium mt-0.5">
